@@ -15,12 +15,12 @@ const chrome = (window as any).chrome;
 const views = ref(0);
 const rpm = ref(5); // 默认RPM值
 const adRate = ref(60); // 广告投放率 40%-80%
-const brandCollaboration = ref(0); // 品牌合作收入
+const brandCollaboration = ref(0); // 品牌合作收益
 const premiumShare = ref(0); // Premium分成
 const membershipCount = ref(0); // 会员数
-const membershipFee = ref(4.99); // 会员费
-const superChat = ref(0); // 打赏收入
-const merchandise = ref(0); // 带货收入
+const membershipFee = ref(5); // 会员费
+const superChat = ref(0); // 打赏收益
+const merchandise = ref(0); // 带货收益
 const isLoading = ref(true);
 const errorMessage = ref('');
 
@@ -28,9 +28,9 @@ const errorMessage = ref('');
 const loadSettingsFromStorage = () => {
   try {
     chrome.storage.sync.get(['rpm', 'adRate', 'membershipFee'], (result: any) => {
-      if (result.rpm !== undefined) rpm.value = result.rpm;
-      if (result.adRate !== undefined) adRate.value = result.adRate;
-      if (result.membershipFee !== undefined) membershipFee.value = result.membershipFee;
+      if (result.rpm !== undefined) rpm.value = Number(result.rpm);
+      if (result.adRate !== undefined) adRate.value = Number(result.adRate);
+      if (result.membershipFee !== undefined) membershipFee.value = Number(result.membershipFee);
     });
   } catch (error) {
     console.log('加载设置失败，使用默认值');
@@ -40,10 +40,10 @@ const loadSettingsFromStorage = () => {
 // 保存设置到存储
 const saveSettingsToStorage = () => {
   try {
-    chrome.storage.sync.set({ 
-      rpm: rpm.value, 
-      adRate: adRate.value, 
-      membershipFee: membershipFee.value 
+    chrome.storage.sync.set({
+      rpm: rpm.value,
+      adRate: adRate.value,
+      membershipFee: membershipFee.value
     });
   } catch (error) {
     console.error('保存设置失败:', error);
@@ -73,12 +73,39 @@ const merchandiseRevenue = computed(() => {
 });
 
 const totalRevenue = computed(() => {
-  return adRevenue.value + brandCollaboration.value + premiumShare.value + 
-         membershipRevenue.value + superChatRevenue.value + merchandiseRevenue.value;
+  return adRevenue.value + brandCollaboration.value + premiumShare.value +
+    membershipRevenue.value + superChatRevenue.value + merchandiseRevenue.value;
 });
 
 const totalRevenueCNY = computed(() => {
   return totalRevenue.value * 7.2; // 转换为人民币（假设汇率1:7.2）
+});
+
+// 显式处理广告投放率滑块输入，确保为数字并触发计算
+const onAdRateInput = (event: Event) => {
+  const target = event.target as HTMLInputElement | null;
+  if (!target) return;
+  adRate.value = Number(target.value);
+};
+
+// 展示用公式（将变量代入实际数值）
+const formulaDisplay = computed(() => {
+  const viewsPerThousand = (views.value / 1000).toFixed(2);
+  const rpmDisplay = rpm.value.toFixed(2);
+  const adRateDisplay = adRate.value.toFixed(0);
+  const adRevenueDisplay = adRevenue.value.toFixed(2);
+  const premiumDisplay = premiumShare.value.toFixed(2);
+  const membershipDisplay = membershipRevenue.value.toFixed(2);
+  const superChatDisplay = superChatRevenue.value.toFixed(2);
+  const merchandiseDisplay = merchandiseRevenue.value.toFixed(2);
+  const brandDisplay = brandCollaboration.value.toFixed(2);
+  const totalDisplay = totalRevenue.value.toFixed(2);
+  const membershipCountValue = membershipCount.value;
+  const membershipFeeDisplay = membershipFee.value.toFixed(2);
+  const superChatInputDisplay = superChat.value.toFixed(2);
+  const merchandiseInputDisplay = merchandise.value.toFixed(2);
+
+  return `运算：$${totalDisplay} = [(${viewsPerThousand} × ${rpmDisplay} × ${adRateDisplay}% × 55%) + $${premiumDisplay} + (${membershipCountValue} × ${membershipFeeDisplay} × 70%) + ($${superChatInputDisplay} × 70%) + ($${merchandiseInputDisplay} × 50%) + $${brandDisplay}] ≈ $${adRevenueDisplay} + $${premiumDisplay} + $${membershipDisplay} + $${superChatDisplay} + $${merchandiseDisplay} + $${brandDisplay}`;
 });
 
 // 格式化数字
@@ -96,7 +123,7 @@ const getCurrentPageData = async () => {
   try {
     isLoading.value = true;
     errorMessage.value = '';
-    
+
     // 向content script发送消息获取数据
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab.id) {
@@ -106,7 +133,7 @@ const getCurrentPageData = async () => {
         isLoading.value = false;
         return;
       }
-      
+
       // 添加错误处理和重试机制
       try {
         const response = await chrome.tabs.sendMessage(tab.id, { action: 'getVideoData' });
@@ -121,15 +148,15 @@ const getCurrentPageData = async () => {
         // 如果消息发送失败，尝试注入content script
         if (messageError.message.includes('Receiving end does not exist')) {
           console.log('Content script未加载，尝试注入...');
-                      try {
-              await chrome.scripting.executeScript({
-                target: { tabId: tab.id },
-                files: ['content-scripts/content.js']
-              });
-            
+          try {
+            await chrome.scripting.executeScript({
+              target: { tabId: tab.id },
+              files: ['content-scripts/content.js']
+            });
+
             // 等待一下再尝试发送消息
             await new Promise(resolve => setTimeout(resolve, 1000));
-            
+
             const retryResponse = await chrome.tabs.sendMessage(tab.id, { action: 'getVideoData' });
             if (retryResponse && retryResponse.success) {
               views.value = retryResponse.views || 0;
@@ -156,10 +183,7 @@ const getCurrentPageData = async () => {
   }
 };
 
-// 重新计算收益
-const recalculateRevenue = () => {
-  console.log('重新计算收益:', totalRevenue.value);
-};
+// 保留自动计算，无需手动按钮
 
 // 组件挂载时获取数据
 onMounted(() => {
@@ -201,31 +225,18 @@ onMounted(() => {
             <span class="views-value">{{ formatNumber(views) }}</span>
           </div>
         </div>
-        
+
         <div class="input-group">
-          <label class="input-label">RPM (每千次观看收入)</label>
-          <input 
-            type="number" 
-            v-model="rpm" 
-            min="0.1" 
-            max="20" 
-            step="0.1" 
-            class="input-field"
-            placeholder="5.0"
-          />
+          <label class="input-label">RPM (每千次观看收益)</label>
+          <input type="number" v-model.number="rpm" min="0.1" max="20" step="0.1" class="input-field"
+            placeholder="5.0" />
         </div>
 
         <div class="input-group">
           <label class="input-label">广告投放率: {{ adRate }}%</label>
           <div class="slider-container">
-            <input 
-              type="range" 
-              v-model="adRate" 
-              min="40" 
-              max="80" 
-              step="5" 
-              class="slider"
-            />
+            <input type="range" :value="adRate" @input="onAdRateInput" @change="onAdRateInput" min="40" max="80"
+              step="5" class="slider" />
             <div class="slider-labels">
               <span>40%</span>
               <span>80%</span>
@@ -234,113 +245,74 @@ onMounted(() => {
         </div>
 
         <div class="input-group">
-          <label class="input-label">品牌合作收入 ($)</label>
-          <input 
-            type="number" 
-            v-model="brandCollaboration" 
-            min="0" 
-            step="100" 
-            class="input-field"
-            placeholder="0"
-          />
+          <label class="input-label">品牌合作收益 ($)</label>
+          <input type="number" v-model.number="brandCollaboration" min="0" step="100" class="input-field"
+            placeholder="0" />
         </div>
       </div>
 
-      <!-- 分成收入 -->
-      <div class="section">
-        <div class="section-header">
-          <span class="section-icon">💎</span>
-          <h3>分成收入</h3>
-        </div>
-        
-        <div class="input-group">
-          <label class="input-label">Premium分成 ($)</label>
-          <input 
-            type="number" 
-            v-model="premiumShare" 
-            min="0" 
-            step="100" 
-            class="input-field"
-            placeholder="0"
-          />
+      <div class="two-col">
+        <!-- 分成收益 -->
+        <div class="section">
+          <div class="section-header">
+            <span class="section-icon">💎</span>
+            <h3>分成收益</h3>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Premium分成($)</label>
+            <input type="number" v-model.number="premiumShare" min="0" step="100" class="input-field" placeholder="0" />
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">会员数量</label>
+            <input type="number" v-model.number="membershipCount" min="0" class="input-field" placeholder="0" />
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">会员费 ($/月)</label>
+            <input type="number" v-model.number="membershipFee" min="0" step="0.01" class="input-field"
+              placeholder="5" />
+          </div>
         </div>
 
-        <div class="input-group">
-          <label class="input-label">会员数量</label>
-          <input 
-            type="number" 
-            v-model="membershipCount" 
-            min="0" 
-            class="input-field"
-            placeholder="0"
-          />
-        </div>
+        <!-- 打赏/带货 -->
+        <div class="section">
+          <div class="section-header">
+            <span class="section-icon">🎁</span>
+            <h3>打赏/带货</h3>
+          </div>
 
-        <div class="input-group">
-          <label class="input-label">会员费 ($/月)</label>
-          <input 
-            type="number" 
-            v-model="membershipFee" 
-            min="0" 
-            step="0.01" 
-            class="input-field"
-            placeholder="4.99"
-          />
-        </div>
-      </div>
+          <div class="input-group">
+            <label class="input-label">打赏收益 ($)</label>
+            <input type="number" v-model.number="superChat" min="0" step="10" class="input-field" placeholder="0" />
+          </div>
 
-      <!-- 打赏/带货 -->
-      <div class="section">
-        <div class="section-header">
-          <span class="section-icon">🎁</span>
-          <h3>打赏/带货</h3>
-        </div>
-        
-        <div class="input-group">
-          <label class="input-label">打赏收入 ($)</label>
-          <input 
-            type="number" 
-            v-model="superChat" 
-            min="0" 
-            step="10" 
-            class="input-field"
-            placeholder="0"
-          />
-        </div>
-
-        <div class="input-group">
-          <label class="input-label">带货收入 ($)</label>
-          <input 
-            type="number" 
-            v-model="merchandise" 
-            min="0" 
-            step="100" 
-            class="input-field"
-            placeholder="0"
-          />
+          <div class="input-group">
+            <label class="input-label">带货收益 ($)</label>
+            <input type="number" v-model.number="merchandise" min="0" step="100" class="input-field" placeholder="0" />
+          </div>
         </div>
       </div>
 
       <!-- 总收益显示 -->
       <div class="total-section">
-        <div class="total-label">预计总收入</div>
+        <div class="total-label">预估总收益</div>
         <div class="total-value">${{ totalRevenue.toFixed(2) }} ≈ ¥{{ totalRevenueCNY.toFixed(2) }}</div>
       </div>
 
-      <!-- 计算按钮 -->
-      <div class="actions">
-        <button @click="recalculateRevenue" class="calculate-btn">
-          重新计算
-        </button>
+      <div class="footer-note">
+        公式：总收益 = [(播放量/1000 × RPM × 广告投放率 × 55%) + Premium分成 + (会员数 × 会员费 × 70%) + (打赏收益 × 70%)] + 品牌合作收益
       </div>
+      <div class="footer-note">{{ formulaDisplay }}</div>
+
     </div>
   </div>
 </template>
 
 <style scoped>
 .revenue-calculator {
-  width: 400px;
-  min-height: 800px;
+  width: 600px;
   background: #ffffff;
   color: #333333;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -359,9 +331,8 @@ onMounted(() => {
 }
 
 .header h1 {
-  margin: 0 0 6px 0;
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 600;
   color: white;
 }
 
@@ -382,8 +353,13 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .error {
@@ -409,7 +385,7 @@ onMounted(() => {
   border: none;
   border-radius: 6px;
   padding: 8px 16px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -421,8 +397,19 @@ onMounted(() => {
 }
 
 .content {
-  padding: 20px;
+  padding: 10px 20px;
   background: #f8f9fa;
+}
+
+.two-col {
+  display: flex;
+  gap: 10px;
+}
+
+.two-col>.section {
+  flex: 1 1 0% !important;
+  min-width: 0;
+  /* 允许列压缩，防止被内部最小内容宽度撑开 */
 }
 
 .section {
@@ -473,10 +460,10 @@ onMounted(() => {
 }
 
 .input-group {
-  margin-bottom: 16px;
   display: flex;
   align-items: center;
   gap: 12px;
+  margin: 4px 0;
 }
 
 .input-group:last-child {
@@ -490,15 +477,15 @@ onMounted(() => {
   color: #495057;
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  min-width: 120px;
-  flex-shrink: 0;
+  flex: 1;
 }
 
 .input-field {
+  min-width: 120px;
   flex: 1;
-  padding: 8px 10px;
+  padding: 6px 8px;
   border: 2px solid #e9ecef;
-  border-radius: 6px;
+  border-radius: 5px;
   background: #ffffff;
   color: #495057;
   font-size: 14px;
@@ -509,7 +496,7 @@ onMounted(() => {
 
 .input-field::placeholder {
   color: #adb5bd;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .input-field:focus {
@@ -523,6 +510,7 @@ onMounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
+  margin: 4px 0;
 }
 
 .slider {
@@ -540,7 +528,7 @@ onMounted(() => {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #667eea;
+  background: #6c757d;
   cursor: pointer;
   border: 2px solid white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -556,7 +544,7 @@ onMounted(() => {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #667eea;
+  background: #6c757d;
   cursor: pointer;
   border: 2px solid white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -574,7 +562,6 @@ onMounted(() => {
   text-align: center;
   padding: 10px;
   background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-  margin-bottom: 20px;
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
   border: 2px solid #ffd700;
@@ -604,34 +591,11 @@ onMounted(() => {
   opacity: 0.9;
 }
 
-.actions {
-  padding: 0;
-}
-
-.calculate-btn {
-  width: 100%;
-  padding: 14px 20px;
-  border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-  color: white;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
-}
-
-.calculate-btn:hover {
-  background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
-}
-
-.calculate-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+.footer-note {
+  margin-top: 8px;
+  color: #6c757d;
+  font-size: 10px;
+  line-height: 1.4;
+  text-align: center;
 }
 </style>

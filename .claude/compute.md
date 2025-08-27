@@ -22,9 +22,9 @@ $$
 \text{广告收入} = \left(\frac{\text{总观看量}}{1000}\right) \times \text{CPM} \times \text{广告投放率} \times 55\%
 $$
 
-* **CPM (Cost per Mille)**：广告主支付的 1000 次广告展示费用
-* **广告投放率**：并非每次观看都会展示广告，通常在 **40%–80%**
-* **55%**：创作者分成比例，YouTube 抽成 45%
+- **CPM (Cost per Mille)**：广告主支付的 1000 次广告展示费用
+- **广告投放率**：并非每次观看都会展示广告，通常在 **40%–80%**
+- **55%**：创作者分成比例，YouTube 抽成 45%
 
 👉 例子：500 万观看，CPM = \$5，广告投放率 60%
 
@@ -40,8 +40,8 @@ $$
 \text{Premium 收入} = \text{Premium 会员观看时长占比} \times \text{Premium 总分成池} \times \text{创作者分成率}
 $$
 
-* Premium 用户每月订阅费，YouTube 将其集中成分成池，再按观看时长分配
-* 创作者分成率大约 **55%–70%**
+- Premium 用户每月订阅费，YouTube 将其集中成分成池，再按观看时长分配
+- 创作者分成率大约 **55%–70%**
 
 👉 例子：如果 Premium 分成池 = \$1 亿，你的视频占所有 Premium 播放时长的 0.01%，则：
 
@@ -57,8 +57,8 @@ $$
 \text{会员收入} = \text{会员人数} \times \text{会员月费} \times 70\%
 $$
 
-* YouTube 抽成 30%，创作者拿 70%
-* 例子：1000 个会员 × \$4.99 × 70% = **\$3,493 / 月**
+- YouTube 抽成 30%，创作者拿 70%
+- 例子：1000 个会员 × \$5 × 70% = **\$3,493 / 月**
 
 ---
 
@@ -68,8 +68,8 @@ $$
 \text{打赏收入} = \text{打赏总额} \times 70\%
 $$
 
-* 观众直播时送礼，YouTube 抽 30%
-* 例子：\$10,000 打赏 → 创作者拿 \$7,000
+- 观众直播时送礼，YouTube 抽 30%
+- 例子：\$10,000 打赏 → 创作者拿 \$7,000
 
 ---
 
@@ -79,8 +79,8 @@ $$
 \text{商品收入} = \text{销售额} \times (1 - \text{平台或供应商抽成比例})
 $$
 
-* 如果用 YouTube 集成的 Teespring，YouTube 不直接抽成，但供应商会扣除成本
-* 实际净利润 ≈ **30%–50%** 销售额
+- 如果用 YouTube 集成的 Teespring，YouTube 不直接抽成，但供应商会扣除成本
+- 实际净利润 ≈ **30%–50%** 销售额
 
 ---
 
@@ -90,19 +90,19 @@ $$
 \text{品牌合作收入} = \text{品牌报价} \ (\text{常见区间：\$10–\$50 每千次观看})
 $$
 
-* 与视频播放量挂钩，也可能按视频条数结算
-* 收入远高于 YouTube 广告，通常是大博主的主要来源
+- 与视频播放量挂钩，也可能按视频条数结算
+- 收入远高于 YouTube 广告，通常是大博主的主要来源
 
 ---
 
 ## 3. 总结：合并公式
 
 $$
-\text{YouTube 总收入} = 
-\Bigg[\left(\frac{播放量}{1000} \times CPM \times 广告投放率 \times 55\%\right) 
-+ (\text{Premium 分成}) 
-+ (\text{会员数} \times 会员费 \times 70\%) 
-+ (\text{Super Chat 打赏} \times 70\%) 
+\text{YouTube 总收入} =
+\Bigg[\left(\frac{播放量}{1000} \times CPM \times 广告投放率 \times 55\%\right)
++ (\text{Premium 分成})
++ (\text{会员数} \times 会员费 \times 70\%)
++ (\text{Super Chat 打赏} \times 70\%)
 + (\text{商品净利润}) \Bigg]
 + \text{品牌合作收入}
 $$
