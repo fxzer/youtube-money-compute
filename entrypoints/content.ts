@@ -2,13 +2,20 @@
 declare global {
   interface Window {
     chrome: any;
+    __YOUTUBE_REVENUE_SCRIPT_LOADED__?: boolean;
   }
 }
+
+// 获取chrome API引用
+const chrome = (window as any).chrome;
 
 export default defineContentScript({
   matches: ['*://*.youtube.com/watch*'],
   main() {
     console.log('YouTube视频页面检测到，开始收益计算...');
+    
+    // 标记content script已加载
+    window.__YOUTUBE_REVENUE_SCRIPT_LOADED__ = true;
     
     // 初始化收益计算器
     const initPage = () => {
@@ -62,22 +69,34 @@ export default defineContentScript({
     observer.observe(document.body, { childList: true, subtree: true });
     
     // 添加消息监听器，用于响应popup的请求
-    if (typeof (window as any).chrome !== 'undefined' && (window as any).chrome.runtime) {
-      (window as any).chrome.runtime.onMessage.addListener((
+    if (typeof chrome !== 'undefined' && chrome.runtime) {
+      chrome.runtime.onMessage.addListener((
         request: { action: string }, 
         sender: any, 
         sendResponse: (response: any) => void
       ) => {
+        console.log('[ Content Script ] 收到消息:', request);
+        
         if (request.action === 'getVideoData') {
           try {
+            // 检查是否在YouTube视频页面
+            if (!window.location.href.includes('youtube.com/watch')) {
+              sendResponse({
+                success: false,
+                error: '当前页面不是YouTube视频页面'
+              });
+              return true;
+            }
+            
             const views = getVideoViews();
+            console.log('[ Content Script ] 获取到观看量:', views);
             
             sendResponse({
               success: true,
               views: views || 0
             });
           } catch (error: any) {
-            console.error('获取视频数据失败:', error);
+            console.error('[ Content Script ] 获取视频数据失败:', error);
             sendResponse({
               success: false,
               error: error.message
@@ -86,6 +105,10 @@ export default defineContentScript({
           return true; // 保持消息通道开放
         }
       });
+      
+      console.log('[ Content Script ] 消息监听器已设置');
+    } else {
+      console.log('[ Content Script ] Chrome API 不可用');
     }
   },
 });
