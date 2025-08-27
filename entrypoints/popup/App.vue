@@ -81,6 +81,15 @@ const totalRevenueCNY = computed(() => {
   return totalRevenue.value * 7.2; // 转换为人民币（假设汇率1:7.2）
 });
 
+// 金额格式化（千分位+两位小数）
+const formatAmount = (num: number, locale: string = 'en-US') => {
+  try {
+    return num.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  } catch {
+    return num.toFixed(2);
+  }
+};
+
 // 显式处理广告投放率滑块输入，确保为数字并触发计算
 const onAdRateInput = (event: Event) => {
   const target = event.target as HTMLInputElement | null;
@@ -298,7 +307,8 @@ onMounted(() => {
       <!-- 总收益显示 -->
       <div class="total-section">
         <div class="total-label">预估总收益</div>
-        <div class="total-value">${{ totalRevenue.toFixed(2) }} ≈ ¥{{ totalRevenueCNY.toFixed(2) }}</div>
+        <div class="total-value">${{ formatAmount(totalRevenue, 'en-US') }} ≈ ¥{{ formatAmount(totalRevenueCNY, 'zh-CN')
+          }}</div>
       </div>
 
       <div class="footer-note">
