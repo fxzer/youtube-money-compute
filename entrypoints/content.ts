@@ -185,7 +185,7 @@ function initRevenueCalculator() {
   const revenueCard = document.createElement('div');
   revenueCard.id = 'youtube-revenue-card';
   revenueCard.style.margin = '16px auto';
-  revenueCard.style.padding = '16px';
+  revenueCard.style.padding = '12px';
   revenueCard.style.background = 'var(--yt-spec-base-background)';
   revenueCard.style.borderRadius = '10px';
   revenueCard.style.border = '1px solid var(--yt-spec-10-percent-layer)';
