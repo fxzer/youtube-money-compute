@@ -13,7 +13,7 @@
 
 ### 效果展示
 
-![YouTube 收益计算器扩展效果](example.png)
+![YouTube 收益计算器扩展效果](./public/example.png)
 
 *扩展在 YouTube 视频页面右侧显示收益计算卡片，支持实时配置 RPM 和广告投放率*
 
